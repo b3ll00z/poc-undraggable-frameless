@@ -1,33 +1,55 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserView, BrowserWindow } from "electron";
 import * as path from "path";
+
+const framelessOptions = {
+  thickFrame: false,
+  frame: false,
+  transparent: true
+};
 
 function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    height: 600,
+    height: 400,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
-    width: 800,
+    width: 600,
+    ...framelessOptions
   });
 
   // and load the index.html of the app.
-  mainWindow.loadFile(path.join(__dirname, "../index.html"));
+  mainWindow.loadFile(path.join(__dirname, "../drag-region.html"));
+  return mainWindow;
+}
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+function createUndraggableFramelessWindow() {
+  const window = createWindow();
+  const view = new BrowserView();
+  view.webContents.loadURL("https://electronjs.org");
+  window.addBrowserView(view);
+  view.setBounds({ x: 0, y: 0, width: 300, height: 300 });
+}
+
+function createDraggableFramelessWindow() {
+  const window = createWindow();
+  const view = new BrowserView();
+  view.webContents.loadURL("https://electronjs.org");
+  window.addBrowserView(view);
+  view.setBounds({ x: 50, y: 50, width: 300, height: 300 });
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", () => {
-  createWindow();
-
   app.on("activate", function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) {
+      // On macOS it's common to re-create a window in the app when the
+      // dock icon is clicked and there are no other windows open.
+      createUndraggableFramelessWindow();
+      createDraggableFramelessWindow();
+    }
   });
 });
 
